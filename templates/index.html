@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AQI Predictor — Air Quality Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">🌬️</div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" title="Dashboard">📊</div>
+    <div class="nav-item" title="Map">🗺️</div>
+    <div class="nav-item" title="Analytics">📈</div>
+    <div class="nav-item" title="History">🕓</div>
+    <div class="nav-item" title="Alerts">🔔</div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="nav-item" title="Settings">⚙️</div>
+  </div>
+</aside>
+
+<div class="main">
+
+  <!-- HEADER -->
+  <header class="header fade-up">
+    <div class="header-left">
+      <h1>Air Quality Intelligence</h1>
+      <p>AQI Prediction System · ML-Powered</p>
+    </div>
+    <div class="header-right">
+      <select class="city-select" id="citySelect">
+        <option value="Mumbai">Mumbai</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Bangalore">Bangalore</option>
+        <option value="Chennai">Chennai</option>
+        <option value="Kolkata">Kolkata</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Pune">Pune</option>
+        <option value="Ahmedabad">Ahmedabad</option>
+      </select>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </div>
+  </header>
+
+  <!-- LEFT PANEL -->
+  <main class="left-panel">
+
+    <!-- AQI HERO -->
+    <div class="aqi-hero fade-up delay-1" id="aqiHero">
+      <div>
+        <div class="aqi-label">Current AQI Index</div>
+        <div class="aqi-value" id="aqiValue">—</div>
+        <div class="aqi-category" id="aqiCategory">Run a Prediction</div>
+        <div class="aqi-desc" id="aqiDesc">Enter pollutant values on the right and click Predict.</div>
+      </div>
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 130 130">
+          <circle class="gauge-bg" cx="65" cy="65" r="52"/>
+          <circle class="gauge-arc" id="gaugeArc" cx="65" cy="65" r="52"
+            stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-pct" id="gaugePct">0%</div>
+          <div class="gauge-unit">of max</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POLLUTANT CARDS -->
+    <div class="fade-up delay-2">
+      <div class="section-title">Pollutant Readings</div>
+      <div class="pollutant-grid" id="pollutantGrid"></div>
+    </div>
+
+    <!-- TREND CHART -->
+    <div class="chart-card fade-up delay-3">
+      <div class="chart-header">
+        <h3>AQI Trend</h3>
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="switchTab(this,'7d')">7D</div>
+          <div class="chart-tab" onclick="switchTab(this,'30d')">30D</div>
+          <div class="chart-tab" onclick="switchTab(this,'90d')">90D</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel fade-up delay-2">
+
+    <div>
+      <div class="panel-title">Predict AQI</div>
+      <div class="panel-sub">Enter environmental readings</div>
+    </div>
+
+    <hr class="divider"/>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="section-title" style="margin-bottom:0;">Pollutants (µg/m³)</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <label class="input-label">PM2.5 <span id="v_pm25">—</span></label>
+          <input class="input-field" id="pm25" type="number" placeholder="e.g. 45" min="0" oninput="updateLabel('pm25','v_pm25')"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label">PM10 <span id="v_pm10">—</span></label>
+          <input class="input-field" id="pm10" type="number" placeholder="e.g. 80" min="0" oninput="updateLabel('pm10','v_pm10')"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label">NO₂ <span id="v_no2">—</span></label>
+          <input class="input-field" id="no2" type="number" placeholder="e.g. 30" min="0" oninput="updateLabel('no2','v_no2')"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label">SO₂ <span id="v_so2">—</span></label>
+          <input class="input-field" id="so2" type="number" placeholder="e.g. 15" min="0" oninput="updateLabel('so2','v_so2')"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label">CO (mg/m³) <span id="v_co">—</span></label>
+          <input class="input-field" id="co" type="number" placeholder="e.g. 1.2" min="0" step="0.1" oninput="updateLabel('co','v_co')"/>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-bottom:0;margin-top:4px;">Meteorology</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <label class="input-label">Temp (°C) <span id="v_temp">—</span></label>
+          <input class="input-field" id="temp" type="number" placeholder="e.g. 28" oninput="updateLabel('temp','v_temp')"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Humidity % <span id="v_hum">—</span></label>
+          <input class="input-field" id="humidity" type="number" placeholder="e.g. 65" min="0" max="100" oninput="updateLabel('humidity','v_hum')"/>
+        </div>
+      </div>
+    </div>
+
+    <button class="predict-btn" id="predictBtn" onclick="runPrediction()">
+      ⚡ Predict AQI
+    </button>
+
+    <hr class="divider"/>
+
+    <div>
+      <div class="section-title">Recent Predictions</div>
+      <div id="historyList">
+        <div style="font-size:13px;color:var(--muted);font-family:var(--font-mono);">No predictions yet.</div>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- Chart.js loaded locally from static folder -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
